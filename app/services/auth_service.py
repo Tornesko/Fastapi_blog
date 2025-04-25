@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.schemas.user import UserCreate
 from app.auth.jwt import create_access_token
@@ -8,26 +9,37 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
+async def get_user_by_email(db: AsyncSession, email: str):
+    result = await db.execute(
+        select(User).where(User.email == email)
+    )
+    return result.scalars().first()
 
 
-def create_user(db: Session, user_data: UserCreate):
-    if get_user_by_email(db, user_data.email):
-        raise HTTPException(status_code=400, detail="Email already registered")
+async def create_user(db: AsyncSession, user_data: UserCreate):
+    user = await get_user_by_email(db, user_data.email)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User already exists"
+        )
 
     hashed_password = pwd_context.hash(user_data.password)
-    user = User(email=user_data.email, password=hashed_password)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+    new_user = User(email=user_data.email, password=hashed_password)
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    return new_user
 
 
-def authenticate_user(db: Session, email: str, password: str):
-    user = get_user_by_email(db, email)
-    if not user or not pwd_context.verify(password, user.password):
-        raise HTTPException(status_code=401, detail="Incorrect email or password")
+
+async def authenticate_user(db: AsyncSession, email: str, password: str):
+    user = await get_user_by_email(db, email)
+    if not user:
+        return None
+    if not pwd_context.verify(password, user.password):
+        return None
     return user
 
 

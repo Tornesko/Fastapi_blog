@@ -1,11 +1,15 @@
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 
-DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://user:password@db:3306/mydb")
+DATABASE_URL = os.getenv("DATABASE_URL", "mysql+aiomysql://user:password@db:3306/mydb")
 
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+engine = create_async_engine(DATABASE_URL)
+SessionLocal = async_sessionmaker(
+    bind=engine,
+    expire_on_commit=False,
+    class_=AsyncSession,
+)
 
 Base = declarative_base()

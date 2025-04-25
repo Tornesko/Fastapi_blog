@@ -21,7 +21,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/mydb
+      DATABASE_URL: mysql+aiomysql://user:password@db:3306/mydb
       SECRET_KEY: your_secret_key
     volumes:
       - .:/app

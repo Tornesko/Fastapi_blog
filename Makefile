@@ -17,3 +17,9 @@ run: build up
 
 bash:
 	docker-compose exec fastapi /bin/bash
+
+freeze:
+	pip freeze > requirements.txt
+
+logs:
+	docker-compose logs -f fastapi
