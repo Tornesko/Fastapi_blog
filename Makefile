@@ -17,3 +17,6 @@ init_db:
 	docker-compose exec fastapi python -m app.init_db
 
 run: build up
+
+bash:
+	docker-compose exec fastapi /bin/bash
