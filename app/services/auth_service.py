@@ -33,7 +33,6 @@ async def create_user(db: AsyncSession, user_data: UserCreate):
     return new_user
 
 
-
 async def authenticate_user(db: AsyncSession, email: str, password: str):
     user = await get_user_by_email(db, email)
     if not user:
